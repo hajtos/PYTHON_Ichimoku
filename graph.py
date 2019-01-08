@@ -1,7 +1,10 @@
 from candle import Candle
+from types import MethodType
+
 
 def to_float(s):
     return float(s.replace(",", "."))
+
 
 class Graph:
     def __init__(self):
@@ -20,11 +23,16 @@ class Graph:
             values = [l.split(";") for l in linie]
             dates = [v[0] for v in values]
             candles = [Candle([to_float(s) for s in v[1:5]]) for v in values]
-        return (dates, candles)
+        return dates, candles
 
     def load_from_file(self, filename_ask, filename_bid):
         self.dates, self.ask_candles = self.candles_from_file(filename_ask)
+        self.date = MethodType(lambda self, i: self.dates[i], self)
+        for attr_name in ["high", "low", "open", "close"]:
+            setattr(self, "ask_"+attr_name, MethodType(lambda self, i: getattr(self.ask_candles[i], attr_name), self))
         _, self.bid_candles = self.candles_from_file(filename_bid)
+        for attr_name in ["high", "low", "open", "close"]:
+            setattr(self, attr_name, MethodType(lambda self, i: getattr(self.bid_candles[i], attr_name), self))
 
     def get_my_index_for(self, index, base_interval):
         return base_interval * index // self.timeframe
@@ -44,6 +52,7 @@ class Graph:
 
     def register_indicator(self, func, name, *params):
         self.wskazniki.append((name, func(*params)))
+        setattr(self, name, MethodType(lambda self, i: self.linie.get((name, i)), self))
 
     def calculate_all_indicators(self):
         self.linie = {}

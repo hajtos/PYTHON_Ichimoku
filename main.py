@@ -3,8 +3,7 @@ from indicators import *
 import ichimoku_strategy
 
 wykres = Graph()
-wykres.load_from_file("D:\\Documents\\FOREX\\TESTY\\DANE\\EURJPY_1 Min_Ask_2014.01.01_2018.11.03.csv",\
-                      "D:\\Documents\\FOREX\\TESTY\\DANE\\EURJPY_1 Min_Bid_2014.01.01_2018.11.03.csv")
+wykres.load_from_file("test_ask.csv", "test_bid.csv")
 
 wykres_4h = wykres.make_graph_with_timeframe(240)
 wykres_4h.register_indicator(ichimoku_kijun_tenkan, "kijun_sen", 28)
