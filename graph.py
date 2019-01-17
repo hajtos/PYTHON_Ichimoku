@@ -25,14 +25,17 @@ class Graph:
             candles = [Candle([to_float(s) for s in v[1:5]]) for v in values]
         return dates, candles
 
-    def load_from_file(self, filename_ask, filename_bid):
-        self.dates, self.ask_candles = self.candles_from_file(filename_ask)
+    def set_shortcuts(self):
         self.date = MethodType(lambda self, i: self.dates[i], self)
         for attr_name in ["high", "low", "open", "close"]:
             setattr(self, "ask_"+attr_name, MethodType(lambda self, i: getattr(self.ask_candles[i], attr_name), self))
-        _, self.bid_candles = self.candles_from_file(filename_bid)
         for attr_name in ["high", "low", "open", "close"]:
             setattr(self, attr_name, MethodType(lambda self, i: getattr(self.bid_candles[i], attr_name), self))
+
+    def load_from_file(self, filename_ask, filename_bid):
+        self.dates, self.ask_candles = self.candles_from_file(filename_ask)
+        _, self.bid_candles = self.candles_from_file(filename_bid)
+        self.set_shortcuts()
 
     def get_my_index_for(self, index, base_interval):
         return base_interval * index // self.timeframe
@@ -48,6 +51,7 @@ class Graph:
             new_graph.ask_candles.append(Candle.merge_candles(self.ask_candles[index:index+relative]))
             new_graph.bid_candles.append(Candle.merge_candles(self.bid_candles[index:index+relative]))
             new_graph.dates.append(self.dates[index])
+        new_graph.set_shortcuts()
         return new_graph
 
     def register_indicator(self, func, name, *params):

@@ -57,7 +57,7 @@ def najblizsze_wsparcie(history_length, window_size):
     def indicator(graph, index):
         wsparcie = 0
         for i in range(index - history_length, index - window_size):
-            if i < 0:
+            if i < window_size:
                 continue
             candles = graph.bid_candles[i-window_size: i+window_size+1]
             if min(c.close for c in candles) == graph.bid_candles[i].close and\
