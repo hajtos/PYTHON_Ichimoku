@@ -23,7 +23,7 @@ wykres_week.register_indicator(najblizsze_wsparcie, "najblizsze_wsparcie", 100, 
 wykres_week.calculate_all_indicators()
 
 ichimoku = ichimoku_strategy.IchimokuStrategy(wykres_4h, wykres_24h, wykres_week)
-ichimoku.traverse_graph(1000, 1100)
+ichimoku.traverse_graph(0, 2000)
 
 print(ichimoku.results, ichimoku.entry_points, [wykres_4h.dates[i] for i, direct in ichimoku.entry_points])
 out = open("costam.csv", "w")

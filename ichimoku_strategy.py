@@ -4,6 +4,7 @@ from strategy import Strategy
 class IchimokuStrategy(Strategy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.start_needed = 26
         self.last_close = -1
         self.max_age = 3
     
@@ -90,9 +91,11 @@ class IchimokuStrategy(Strategy):
         stoploss = self.stoploss(index, direction, signal_type)
         takeprofit = self.takeprofit(index, direction, signal_type)
         current = self.graph.ask_close(index)
+        if takeprofit is None or stoploss is None:
+            return False
         ratio = (takeprofit - current)/(current - stoploss)
         if signal_type and ratio > 2.:
             self.sl = stoploss
             self.tp = 3 * current - 2 * stoploss
             self.tran_open = current
-            return True
+            return direction
