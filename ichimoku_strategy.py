@@ -1,12 +1,47 @@
 from strategy import Strategy
 
 
+class ZigZag:
+    def __init__(self, fraction, graph):
+        self.peaks = [(0, graph.close(0))]
+        i = 1
+        while graph.close(i) == graph.close(0):
+            i += 1
+        direction = 1 if graph.close(i) >= graph.close(0) else -1
+        curr_peak = graph.close(i)
+        peak_index = i
+        self.graph = graph
+        for i in range(i, len(graph.ask_candles)):
+            if (graph.close(i) - curr_peak) * direction > 0:
+                curr_peak = graph.close(i)
+                peak_index = i
+            elif (graph.close(i) - curr_peak) / (self.peaks[-1][1] - curr_peak) > fraction:
+                self.peaks.append((peak_index, curr_peak))
+                direction *= -1
+                curr_peak = graph.close(i)
+                peak_index = i
+        i = len(graph.ask_candles) - 1
+        self.peaks.append((peak_index, curr_peak))
+        self.peaks.append((i, graph.close(i)))
+
+    def __call__(self, index, history_wall):
+        assert index < history_wall
+        peak_index = 0
+        while self.peaks[peak_index][0] < index:
+            peak_index += 1
+        right_side = min([history_wall, self.peaks[peak_index][0]])
+        left_side = self.peaks[peak_index - 1][0]
+        return (index - left_side) * (self.graph.close(right_side) - self.graph.close(left_side)) \
+               / (right_side - left_side)
+
+
 class IchimokuStrategy(Strategy):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_needed = 26
         self.last_close = -1
         self.max_age = 3
+        self.zigzag = ZigZag(0.09, self.graph)
     
     def manage_transaction(self, index, direction, multiplier=1.0):
         i = index
@@ -79,6 +114,7 @@ class IchimokuStrategy(Strategy):
         return None
 
     def check_for_entry(self, index):
+        x = self.zigzag(index - 100, index)
         if index <= self.last_close:
             return False
         direction = 1 if self.graph.tenkan_sen(index) > self.graph.tenkan_sen(index - 1) else -1
