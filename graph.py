@@ -1,3 +1,5 @@
+from bisect import bisect_left
+
 from candle import Candle
 from types import MethodType
 
@@ -37,8 +39,11 @@ class Graph:
         _, self.bid_candles = self.candles_from_file(filename_bid)
         self.set_shortcuts()
 
-    def get_my_index_for(self, index, base_interval):
-        return base_interval * index // self.timeframe
+    def get_my_index_for(self, date):
+        index = bisect_left(self.dates, date)
+        if self.dates[index] != date:
+            index -= 1
+        return index
 
     def make_graph_with_timeframe(self, interval):
         relative = interval / self.timeframe

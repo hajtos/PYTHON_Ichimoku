@@ -75,7 +75,7 @@ class IchimokuStrategy(Strategy):
             and (self.graph.tenkan_sen(index) - self.graph.senkou_span_A(index - 26)) * direction > 0 \
             and (self.graph.tenkan_sen(index) - self.graph.senkou_span_B(index - 26)) * direction > 0
         wykres1D = self.graphs[0]
-        index1D = wykres1D.get_my_index_for(index, self.graph.timeframe)
+        index1D = wykres1D.get_my_index_for(self.graph.dates[index])
         signal1_present = signal1_present and (wykres1D.close(index1D) - wykres1D.kijun_sen(index1D)) * direction > 0
         signal1_age = 1
         """while (self.graph.tenkan_sen(index - signal1_age) - self.graph.kijun_sen(index - signal1_age)) * direction > 0:
@@ -106,7 +106,7 @@ class IchimokuStrategy(Strategy):
 
     def takeprofit(self, index, signal, signal_type):
         week_graph = self.graphs[1]
-        week_index = week_graph.get_my_index_for(index, self.graph.timeframe)
+        week_index = week_graph.get_my_index_for(self.graph.dates[index])
         if signal == 1:
             return week_graph.najblizszy_opor(week_index)
         elif signal == -1:

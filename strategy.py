@@ -18,8 +18,16 @@ class Strategy:
         self.entry_points = []
         self.results = []
 
-    def traverse_graph(self, start_index=0, end_index=None):
+    def traverse_graph(self, start=0, end=None):
         self.reset_entries()
+        if isinstance(start, str):
+            start_index = self.graph.get_my_index_for(start)
+        else:
+            start_index = start
+        if isinstance(end, str):
+            end_index = self.graph.get_my_index_for(end)
+        else:
+            end_index = end
         end_index = end_index or len(self.graph.ask_candles)
         end_index = min(end_index, len(self.graph.ask_candles))
         start_index = start_index
@@ -36,7 +44,6 @@ class Strategy:
             if breaking:
                 break
             start_index += 1
-        print(start_index)
         for index in range(start_index, end_index):
             direction = self.check_for_entry(index)
             if direction:
