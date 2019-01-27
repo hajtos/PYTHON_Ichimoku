@@ -47,14 +47,18 @@ class IchimokuStrategy(Strategy):
         i = index
         sl = self.sl
         tran_open = self.tran_open
-        times = 1
+        #times = 1
         while True:
             candle = self.graph.bid_candles[i]
-            if candle.low < sl:
+            to_sl = ((candle.low if direction == 1 else candle.high) - sl) * direction
+            to_tp = ((candle.low if direction == -1 else candle.high) - self.tp) * direction
+            if to_sl < 0:
                 self.last_close = i
+                print("Result: date-{}, end-{}, result-{}".format(self.graph.dates[i], sl, sl - tran_open))
                 return sl - tran_open
-            if candle.high > self.tp:
+            if to_tp > 0:
                 self.last_close = i
+                print("Result: date-{}, end-{}, result-{}".format(self.graph.dates[i], self.tp, self.tp - tran_open))
                 return self.tp - tran_open
             """
             if candle.close > tran_open + times*(tran_open - self.sl):
@@ -134,4 +138,6 @@ class IchimokuStrategy(Strategy):
             self.sl = stoploss
             self.tp = 3 * current - 2 * stoploss
             self.tran_open = current
+            print("Enter: date-{}, direction-{}, edge-{}, sl-{}".format(
+                    self.graph.dates[index], direction, takeprofit, stoploss))
             return direction
