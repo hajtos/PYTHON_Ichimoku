@@ -40,7 +40,7 @@ class IchimokuStrategy(Strategy):
         super().__init__(*args, **kwargs)
         self.start_needed = 26
         self.last_close = -1
-        self.max_age = 3
+        self.max_age = 5
         self.zigzag = ZigZag(0.09, self.graph)
     
     def manage_transaction(self, index, direction, multiplier=1.0):
@@ -82,20 +82,20 @@ class IchimokuStrategy(Strategy):
         index1D = wykres1D.get_my_index_for(self.graph.dates[index])
         signal1_present = signal1_present and (wykres1D.close(index1D) - wykres1D.kijun_sen(index1D)) * direction > 0
         signal1_age = 1
-        """while (self.graph.tenkan_sen(index - signal1_age) - self.graph.kijun_sen(index - signal1_age)) * direction > 0:
+        while (self.graph.tenkan_sen(index - signal1_age) - self.graph.kijun_sen(index - signal1_age)) * direction > 0:
             signal1_age += 1
-        # signal 2 kumo cross
-        signal2_present = (self.graph.senkou_span_A(index) - self.graph.senkou_span_B(index)) * direction > 0
-        signal2_age = 1
-        while (self.graph.senkou_span_A(index - signal2_age) - self.graph.senkou_span_B(index - signal2_age)) * direction > 0:
-            signal2_age += 1
-        # signal 3 graph crossing kumo
-        signal3_present = (self.graph.close(index) - self.graph.senkou_span_A(index)) * direction > 0 \
-            and (self.graph.close(index) - self.graph.senkou_span_B(index)) * direction > 0
-        signal3_age = 1
-        while (self.graph.close(index - signal3_age) - self.graph.senkou_span_A(index - signal3_age)) * direction > 0 \
-                and (self.graph.close(index - signal3_age) - self.graph.senkou_span_B(index - signal3_age)) * direction > 0:
-            signal3_age += 1"""
+            """# signal 2 kumo cross
+    signal2_present = (self.graph.senkou_span_A(index) - self.graph.senkou_span_B(index)) * direction > 0
+    signal2_age = 1
+    while (self.graph.senkou_span_A(index - signal2_age) - self.graph.senkou_span_B(index - signal2_age)) * direction > 0:
+        signal2_age += 1
+    # signal 3 graph crossing kumo
+    signal3_present = (self.graph.close(index) - self.graph.senkou_span_A(index)) * direction > 0 \
+        and (self.graph.close(index) - self.graph.senkou_span_B(index)) * direction > 0
+    signal3_age = 1
+    while (self.graph.close(index - signal3_age) - self.graph.senkou_span_A(index - signal3_age)) * direction > 0 \
+            and (self.graph.close(index - signal3_age) - self.graph.senkou_span_B(index - signal3_age)) * direction > 0:
+        signal3_age += 1"""
         #signals = [(t, age) for t, pres, age in [(1, signal1_present, signal1_age), (2, signal2_present, signal2_age),
         #                                         (3, signal3_present, signal3_age)] if pres]
         signals = [(1, signal1_age)] if signal1_present else []
@@ -105,7 +105,7 @@ class IchimokuStrategy(Strategy):
 
     def stoploss(self, index, signal, signal_type):
         if signal_type == 1:
-            return self.graph.kijun_sen(index) - signal * 0.02
+            return self.graph.kijun_sen(index) - signal * 0.0002
         return None
 
     def takeprofit(self, index, signal, signal_type):
@@ -118,12 +118,11 @@ class IchimokuStrategy(Strategy):
         return None
 
     def check_for_entry(self, index):
-        x = self.zigzag(index - 100, index)
         if index <= self.last_close:
             return False
         direction = 1 if self.graph.tenkan_sen(index) > self.graph.tenkan_sen(index - 1) else -1
-        if direction * (self.graph.close(index) - self.graph.close(index - 26)) < 0:
-            return False
+        #if direction * (self.graph.close(index) - self.graph.close(index - 26)) < 0:
+        #    return False
         signal_type, age = self.get_signal(index, direction)
         anti_signal, _ = self.get_signal(index, -direction)
         if not signal_type or anti_signal:
@@ -134,6 +133,7 @@ class IchimokuStrategy(Strategy):
         if takeprofit is None or stoploss is None:
             return False
         ratio = (takeprofit - current)/(current - stoploss)
+        print(index, self.graph.date(index), direction, takeprofit, stoploss, current, ratio)
         if signal_type and ratio > 2.:
             self.sl = stoploss
             self.tp = 3 * current - 2 * stoploss

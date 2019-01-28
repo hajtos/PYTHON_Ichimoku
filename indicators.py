@@ -47,7 +47,7 @@ def najblizszy_opor(history_length, window_size):
                 continue
             candles = graph.bid_candles[i-window_size: i+window_size+1]
             if max(c.close for c in candles) == graph.bid_candles[i].close and\
-                graph.bid_candles[i].close < opor:
+                graph.bid_candles[i].close < opor and graph.close(i) > graph.close(index):
                     opor = graph.bid_candles[i].close
         return opor if opor < 999999 else None
     return indicator
@@ -61,7 +61,7 @@ def najblizsze_wsparcie(history_length, window_size):
                 continue
             candles = graph.bid_candles[i-window_size: i+window_size+1]
             if min(c.close for c in candles) == graph.bid_candles[i].close and\
-                graph.bid_candles[i].close > wsparcie:
+                graph.bid_candles[i].close > wsparcie and graph.close(i) < graph.close(index):
                     wsparcie = graph.bid_candles[i].close
         return wsparcie if wsparcie > 0 else None
     return indicator

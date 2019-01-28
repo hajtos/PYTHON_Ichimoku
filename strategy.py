@@ -30,7 +30,6 @@ class Strategy:
             end_index = end
         end_index = end_index or len(self.graph.ask_candles)
         end_index = min(end_index, len(self.graph.ask_candles))
-        start_index = start_index
         while start_index < end_index:
             breaking = True
             ref_index = start_index - self.start_needed
@@ -41,7 +40,7 @@ class Strategy:
                         break
                 if not breaking:
                     break
-            if breaking:
+            if not breaking:
                 break
             start_index += 1
         for index in range(start_index, end_index):
