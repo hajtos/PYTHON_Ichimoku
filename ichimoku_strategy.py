@@ -52,6 +52,11 @@ class IchimokuStrategy(Strategy):
             candle = self.graph.bid_candles[i]
             to_sl = ((candle.low if direction == 1 else candle.high) - sl) * direction
             to_tp = ((candle.low if direction == -1 else candle.high) - self.tp) * direction
+            """
+            ########################################################################
+            Przy wyjsciu z transakcji wypisuje:
+                date wyjscia, na jakim poziomie sie skonczylo i wynik
+            """
             if to_sl < 0:
                 self.last_close = i
                 print("Result: date-{}, end-{}, result-{}".format(self.graph.dates[i], sl, sl - tran_open))
@@ -84,21 +89,20 @@ class IchimokuStrategy(Strategy):
         signal1_age = 1
         while (self.graph.tenkan_sen(index - signal1_age) - self.graph.kijun_sen(index - signal1_age)) * direction > 0:
             signal1_age += 1
-            """# signal 2 kumo cross
-    signal2_present = (self.graph.senkou_span_A(index) - self.graph.senkou_span_B(index)) * direction > 0
-    signal2_age = 1
-    while (self.graph.senkou_span_A(index - signal2_age) - self.graph.senkou_span_B(index - signal2_age)) * direction > 0:
-        signal2_age += 1
-    # signal 3 graph crossing kumo
-    signal3_present = (self.graph.close(index) - self.graph.senkou_span_A(index)) * direction > 0 \
-        and (self.graph.close(index) - self.graph.senkou_span_B(index)) * direction > 0
-    signal3_age = 1
-    while (self.graph.close(index - signal3_age) - self.graph.senkou_span_A(index - signal3_age)) * direction > 0 \
+        # signal 2 kumo cross
+        #signal2_present = (self.graph.senkou_span_A(index) - self.graph.senkou_span_B(index)) * direction > 0
+        #signal2_age = 1
+        #while (self.graph.senkou_span_A(index - signal2_age) - self.graph.senkou_span_B(index - signal2_age)) * direction > 0:
+        #    signal2_age += 1
+        # signal 3 graph crossing kumo
+        signal3_present = (self.graph.close(index) - self.graph.senkou_span_A(index)) * direction > 0 \
+            and (self.graph.close(index) - self.graph.senkou_span_B(index)) * direction > 0
+        signal3_age = 1
+        while (self.graph.close(index - signal3_age) - self.graph.senkou_span_A(index - signal3_age)) * direction > 0 \
             and (self.graph.close(index - signal3_age) - self.graph.senkou_span_B(index - signal3_age)) * direction > 0:
-        signal3_age += 1"""
-        #signals = [(t, age) for t, pres, age in [(1, signal1_present, signal1_age), (2, signal2_present, signal2_age),
-        #                                         (3, signal3_present, signal3_age)] if pres]
-        signals = [(1, signal1_age)] if signal1_present else []
+            signal3_age += 1
+        signals = [(t, age) for t, pres, age in [(1, signal1_present, signal1_age),
+                   (3, signal3_present, signal3_age)] if pres]
         if signals and min(s[1] for s in signals) <= self.max_age:
             return min(signals, key=lambda x: x[1])
         return (0, 0)
@@ -106,12 +110,15 @@ class IchimokuStrategy(Strategy):
     def stoploss(self, index, signal, signal_type):
         if signal_type == 1:
             return self.graph.kijun_sen(index) - signal * 0.0002
+        if signal_type == 3:
+            linie = [self.graph.senkou_span_B(index), self.graph.senkou_span_A(index)]
+            return min(linie) if signal == 1 else max(linie)
         return None
 
     def takeprofit(self, index, signal, signal_type):
         week_graph = self.graphs[1]
         week_index = week_graph.get_my_index_for(self.graph.dates[index])
-        if signal == 1:
+        if signal == 1 or signal == 3:
             return week_graph.najblizszy_opor(week_index)
         elif signal == -1:
             return week_graph.najblizsze_wsparcie(week_index)
@@ -133,11 +140,20 @@ class IchimokuStrategy(Strategy):
         if takeprofit is None or stoploss is None:
             return False
         ratio = (takeprofit - current)/(current - stoploss)
+        """
+        ########################################################################
+        Niezaleznie od stosunku takeprofit do stoploss wypisuje:
+            index, date, kierunke(1, -1), takeprofit, stoploss, obecna cene i stosunek
+        """
         print(index, self.graph.date(index), direction, takeprofit, stoploss, current, ratio)
         if signal_type and ratio > 2.:
             self.sl = stoploss
             self.tp = 3 * current - 2 * stoploss
             self.tran_open = current
+            """#######################################################
+            W momencie wejscia wypisuje:
+                date, kierunek, takeprofit(faktyczny próbowany) i stoploss
+            """
             print("Enter: date-{}, direction-{}, edge-{}, sl-{}".format(
-                    self.graph.dates[index], direction, takeprofit, stoploss))
+                    self.graph.dates[index], direction, self.tp, stoploss))
             return direction

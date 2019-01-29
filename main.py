@@ -28,6 +28,10 @@ wykres_week.register_indicator(najblizsze_wsparcie, "najblizsze_wsparcie", 1000,
 wykres_week.calculate_all_indicators()
 #wykres_week.save_to_file("test_tyg.csv")
 
+"""
+W pliku ichimoku_strategy zostawilem kilka komentarzy oznaczonych #####
+"""
+
 ichimoku = ichimoku_strategy.IchimokuStrategy(wykres_4h, wykres_24h, wykres_week)
 ichimoku.traverse_graph('2011.11.01 00:00:00', '2012.02.01 00:00:00')
 
